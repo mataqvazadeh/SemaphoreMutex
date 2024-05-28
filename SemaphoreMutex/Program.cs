@@ -15,27 +15,12 @@ namespace SemaphoreMutex
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Before every thing start");
-
-            Console.Write("Before ");
-            PrintCriticalResourceInfo(GetLastId());
-
-            Console.WriteLine("Tasks are running ...");
-            var tasks = new List<Task>();
-            for (int i = 1; i <= 10; i++)
+            Console.WriteLine("Tasks are running forever ...");
+            while (true)
             {
-                tasks.Add(Task.Run(Job));
+                Thread.Sleep(1);
+                Task.Run(Job);
             }
-
-            Console.WriteLine("Waiting Waiting Waiting ");
-            Task.WaitAll(tasks.ToArray());
-            Console.WriteLine("Tasks finished their works");
-
-            Console.Write("After  ");
-            PrintCriticalResourceInfo(GetLastId());
-
-            Console.WriteLine("The End. Press a key ...");
-            Console.ReadKey();
         }
 
         private static void Job()
@@ -52,7 +37,7 @@ namespace SemaphoreMutex
                 Console.Write("Before ");
                 int r = GetLastId();
                 PrintCriticalResourceInfo(r);
-                var rnd = new Random().Next(500, 2000);
+                var rnd = new Random().Next(1000, 5000);
                 Thread.Sleep(rnd);
 
                 r++;
@@ -61,7 +46,7 @@ namespace SemaphoreMutex
                 Console.Write("After  ");
                 PrintCriticalResourceInfo(r);
 
-                rnd = new Random().Next(500, 2000);
+                rnd = new Random().Next(1000, 5000);
                 Thread.Sleep(rnd);
             }
             finally
