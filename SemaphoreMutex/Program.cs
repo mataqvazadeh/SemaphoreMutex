@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,18 +11,19 @@ namespace SemaphoreMutex
 {
     internal class Program
     {
-        private static int _criticalResource = 0;
+        private static string _criticalResourcePath = "./resource.txt";
         private static object _lock = new object();
 
         static void Main(string[] args)
         {
             Console.WriteLine("Before every thing start");
+
             Console.Write("Before ");
-            PrintCriticalResourceInfo();
+            PrintCriticalResourceInfo(GetLastId());
 
             Console.WriteLine("Tasks are running ...");
             var tasks = new List<Task>();
-            for(int i = 1; i <= 10; i++)
+            for (int i = 1; i <= 10; i++)
             {
                 tasks.Add(Task.Run(Job));
             }
@@ -30,7 +33,7 @@ namespace SemaphoreMutex
             Console.WriteLine("Tasks finished their works");
 
             Console.Write("After  ");
-            PrintCriticalResourceInfo();
+            PrintCriticalResourceInfo(GetLastId());
 
             Console.WriteLine("The End. Press a key ...");
             Console.ReadKey();
@@ -41,21 +44,29 @@ namespace SemaphoreMutex
             lock (_lock)
             {
                 Console.Write("Before ");
-                PrintCriticalResourceInfo();
-                var r = _criticalResource;
+                int r = GetLastId();
+                PrintCriticalResourceInfo(r);
                 var rnd = new Random().Next(500, 2000);
                 Thread.Sleep(rnd);
 
-                _criticalResource = r + 1;
+                r++;
+                File.AppendAllText(_criticalResourcePath, $"{r}\r\n");
 
                 Console.Write("After  ");
-                PrintCriticalResourceInfo(); 
+                PrintCriticalResourceInfo(r);
             }
         }
 
-        private static void PrintCriticalResourceInfo()
+        private static int GetLastId()
         {
-            Console.WriteLine($"# {Thread.CurrentThread.ManagedThreadId:D3} => {_criticalResource:D2}");
+            var lastLine = File.ReadAllLines(_criticalResourcePath).LastOrDefault();
+            int.TryParse(lastLine, out var id);
+            return id;
+        }
+
+        private static void PrintCriticalResourceInfo(int resourceData)
+        {
+            Console.WriteLine($"# {Thread.CurrentThread.ManagedThreadId:D3} => {resourceData:D2}");
         }
     }
 }
