@@ -12,7 +12,6 @@ namespace SemaphoreMutex
     internal class Program
     {
         private static string _criticalResourcePath = "./resource.txt";
-        private static object _lock = new object();
 
         static void Main(string[] args)
         {
