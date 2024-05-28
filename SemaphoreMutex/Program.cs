@@ -26,37 +26,49 @@ namespace SemaphoreMutex
 
         private static void Job()
         {
-            Console.WriteLine($"{IAm} => Hello");
-            var semaphore = new Semaphore(9, 10, @$"Global\MAT.SemaphoreMutex", out var createdNew);
+            var semaphore = new Semaphore(9, 10, @$"Global\MAT.SemaphoreMutex.Semaphore", out var createdNewSemaphore);
 
             try
             {
-                if (!createdNew)
+                if (!createdNewSemaphore)
                 {
                     if (!semaphore.WaitOne(0))
                     {
-                        Console.WriteLine($"{IAm} => I murdered by you.");
                         return;
                     }
                 }
 
-                int r = GetLastId();
-                var rnd = new Random().Next(1000, 5000);
-                Thread.Sleep(rnd);
+                var mutex = new Mutex(true, @$"Global\MAT.SemaphoreMutex.Mutex", out var createdNewMutex);
 
-                r++;
-                File.AppendAllText(_criticalResourcePath, $"{r}\r\n");
+                if (!createdNewMutex)
+                {
+                    mutex.WaitOne();
+                }
 
-                PrintCriticalResourceInfo(r);
+                try
+                {
+                    int r = GetLastId();
+                    var rnd = new Random().Next(1000, 5000);
+                    Thread.Sleep(rnd);
 
-                rnd = new Random().Next(1000, 5000);
-                Thread.Sleep(rnd);
+                    r++;
+                    File.AppendAllText(_criticalResourcePath, $"{r}\r\n");
+
+                    PrintCriticalResourceInfo(r);
+
+                    rnd = new Random().Next(1000, 5000);
+                    Thread.Sleep(rnd);
+                }
+                finally
+                {
+                    mutex.ReleaseMutex();
+                    mutex.Dispose();
+                }
             }
             finally
             {
                 semaphore.Release();
                 semaphore.Dispose();
-                Console.WriteLine($"{IAm} => Goodbye");
             }
         }
 
