@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -25,25 +26,27 @@ namespace SemaphoreMutex
 
         private static void Job()
         {
-            var mutex = new Mutex(true, @$"Global\MAT.SemaphoreMutex", out var createdNew);
-
-            if (!createdNew)
-            {
-                mutex.WaitOne();
-            }
+            Console.WriteLine($"{IAm} => Hello");
+            var semaphore = new Semaphore(9, 10, @$"Global\MAT.SemaphoreMutex", out var createdNew);
 
             try
             {
-                Console.Write("Before ");
+                if (!createdNew)
+                {
+                    if (!semaphore.WaitOne(0))
+                    {
+                        Console.WriteLine($"{IAm} => I murdered by you.");
+                        return;
+                    }
+                }
+
                 int r = GetLastId();
-                PrintCriticalResourceInfo(r);
                 var rnd = new Random().Next(1000, 5000);
                 Thread.Sleep(rnd);
 
                 r++;
                 File.AppendAllText(_criticalResourcePath, $"{r}\r\n");
 
-                Console.Write("After  ");
                 PrintCriticalResourceInfo(r);
 
                 rnd = new Random().Next(1000, 5000);
@@ -51,8 +54,9 @@ namespace SemaphoreMutex
             }
             finally
             {
-                mutex.ReleaseMutex();
-                mutex.Dispose();
+                semaphore.Release();
+                semaphore.Dispose();
+                Console.WriteLine($"{IAm} => Goodbye");
             }
         }
 
@@ -65,7 +69,9 @@ namespace SemaphoreMutex
 
         private static void PrintCriticalResourceInfo(int resourceData)
         {
-            Console.WriteLine($"# {Thread.CurrentThread.ManagedThreadId:D3} => {resourceData:D2}");
+            Console.WriteLine($"{IAm} => {resourceData:D2}");
         }
+
+        private static string IAm => $"#P{Process.GetCurrentProcess().Id:D8}-#T{Thread.CurrentThread.ManagedThreadId:D4}";
     }
 }
