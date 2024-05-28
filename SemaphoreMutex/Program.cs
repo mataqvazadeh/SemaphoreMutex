@@ -54,6 +54,9 @@ namespace SemaphoreMutex
 
                 Console.Write("After  ");
                 PrintCriticalResourceInfo(r);
+
+                rnd = new Random().Next(500, 2000);
+                Thread.Sleep(rnd);
             }
         }
 
