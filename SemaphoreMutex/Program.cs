@@ -41,7 +41,14 @@ namespace SemaphoreMutex
 
         private static void Job()
         {
-            lock (_lock)
+            var mutex = new Mutex(true, @$"Global\MAT.SemaphoreMutex", out var createdNew);
+
+            if (!createdNew)
+            {
+                mutex.WaitOne();
+            }
+
+            try
             {
                 Console.Write("Before ");
                 int r = GetLastId();
@@ -57,6 +64,11 @@ namespace SemaphoreMutex
 
                 rnd = new Random().Next(500, 2000);
                 Thread.Sleep(rnd);
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+                mutex.Dispose();
             }
         }
 
