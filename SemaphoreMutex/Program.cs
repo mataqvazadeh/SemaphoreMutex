@@ -10,6 +10,8 @@ namespace SemaphoreMutex
     internal class Program
     {
         private static int _criticalResource = 0;
+        private static object _lock = new object();
+
         static void Main(string[] args)
         {
             Console.WriteLine("Before every thing start");
@@ -36,16 +38,19 @@ namespace SemaphoreMutex
 
         private static void Job()
         {
-            Console.Write("Before ");
-            PrintCriticalResourceInfo();
-            var r = _criticalResource;
-            var rnd = new Random().Next(500, 2000);
-            Thread.Sleep(rnd);
+            lock (_lock)
+            {
+                Console.Write("Before ");
+                PrintCriticalResourceInfo();
+                var r = _criticalResource;
+                var rnd = new Random().Next(500, 2000);
+                Thread.Sleep(rnd);
 
-            _criticalResource = r + 1;
+                _criticalResource = r + 1;
 
-            Console.Write("After  ");
-            PrintCriticalResourceInfo();
+                Console.Write("After  ");
+                PrintCriticalResourceInfo(); 
+            }
         }
 
         private static void PrintCriticalResourceInfo()
