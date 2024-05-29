@@ -22,12 +22,9 @@ namespace SemaphoreMutex
 
         public bool Wait()
         {
-            lock (_lock)
+            if (_semaphre.CurrentCount == 0)
             {
-                if (_semaphre.CurrentCount == 0)
-                {
-                    return false;
-                }
+                return false;
             }
 
             _semaphre.Wait();
