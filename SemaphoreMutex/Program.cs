@@ -13,11 +13,11 @@ namespace SemaphoreMutex
     {
         private const string CRITICAL_RESOURCE_PATH = "./resource.txt";
         private const int SEMAPHORE_MAX_COUNT = 10;
-        private static SemaphoreSlim _semaphore;
+        private static MixConcurrencyLock _lock;
 
         static void Main(string[] args)
         {
-            _semaphore = new SemaphoreSlim(SEMAPHORE_MAX_COUNT, SEMAPHORE_MAX_COUNT);
+            _lock = new MixConcurrencyLock(SEMAPHORE_MAX_COUNT, "MAT.SemaphoreMutex.Mutex");
             Console.WriteLine("Tasks are running forever ...");
             while (true)
             {
@@ -28,45 +28,28 @@ namespace SemaphoreMutex
 
         private static void Job()
         {
-            if (_semaphore.CurrentCount == 0)
+            if (!_lock.Wait())
             {
                 return;
             }
 
-            _semaphore.Wait();
-
             try
             {
-                var mutex = new Mutex(true, @$"Global\MAT.SemaphoreMutex.Mutex", out var createdNewMutex);
+                int r = GetLastId();
+                var rnd = new Random().Next(1000, 5000);
+                Thread.Sleep(rnd);
 
-                if (!createdNewMutex)
-                {
-                    mutex.WaitOne();
-                }
+                r++;
+                File.AppendAllText(CRITICAL_RESOURCE_PATH, $"{r}\r\n");
 
-                try
-                {
-                    int r = GetLastId();
-                    var rnd = new Random().Next(1000, 5000);
-                    Thread.Sleep(rnd);
+                PrintCriticalResourceInfo(r);
 
-                    r++;
-                    File.AppendAllText(CRITICAL_RESOURCE_PATH, $"{r}\r\n");
-
-                    PrintCriticalResourceInfo(r);
-
-                    rnd = new Random().Next(1000, 5000);
-                    Thread.Sleep(rnd);
-                }
-                finally
-                {
-                    mutex.ReleaseMutex();
-                    mutex.Dispose();
-                }
+                rnd = new Random().Next(1000, 5000);
+                Thread.Sleep(rnd);
             }
             finally
             {
-                _semaphore.Release();
+                _lock.Release();
             }
         }
 
